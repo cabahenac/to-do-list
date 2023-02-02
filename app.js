@@ -12,21 +12,29 @@ mongoose.connect("mongodb://127.0.0.1:27017/todolistDB");
 
 let port = 3000;
 
-let items = ['Comprar comida', 'Cocinar la comida', 'Comer la comida'];
-let workItems = [];
+const itemsSchema = new mongoose.Schema({ name: String });
+const Item = mongoose.model("Item", itemsSchema);
+
+const item1 = new Item({ name: "Welcome to your todolist" });
+const item2 = new Item({ name: "Hit the + button to add a new item" });
+const item3 = new Item({ name: "<-- Hit this to delete an item>" });
+const defaultItems = [item1, item2, item3];
 
 
-app.get('/', (req, res) => {
-    let today = new Date();
-    const options = {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-    };
+app.get("/", (req, res) => {
+    Item.find({}, (err, foundItems) => {
+        
+        if (foundItems.length === 0) {
+            Item.insertMany(defaultItems, err => {
+                if (err) { console.log(err) }
+                else { console.log("Successfully saved") }
+            });
+            res.redirect("/")
+        } else {
+            res.render('list', { listTitle: "Today", items: foundItems });
+        }
+    });
 
-    let day = today.toLocaleDateString('es-MX', options);
-
-    res.render('list', { listTitle: day, items: items });
 });
 
 
@@ -35,15 +43,22 @@ app.get('/work', (req, res) => {
 });
 
 
-app.post('/', (req, res) => {
-    let item = req.body.newItem;
-    if (req.body.list === 'Pendientes') {
-        workItems.push(item);
-        res.redirect('/work');
-    } else {
-        items.push(item);
-        res.redirect('/');
-    }
+app.post("/", (req, res) => {
+    const itemName = req.body.newItem;
+    const item = new Item({ name: itemName });
+    item.save();
+    res.redirect("/");
+});
+
+app.post("/delete", (req, res) => {
+    const checkedItemId = req.body.checkbox;
+
+    Item.findByIdAndRemove(checkedItemId, err => {
+        if (err) { console.log(err) }
+        else { console.log(`Successfully deleted item ${checkedItemId}`) }
+    });
+
+    res.redirect("/")
 });
 
 
