@@ -20,6 +20,12 @@ const item2 = new Item({ name: "Hit the + button to add a new item" });
 const item3 = new Item({ name: "<-- Hit this to delete an item>" });
 const defaultItems = [item1, item2, item3];
 
+const listSchema = {
+    name: String,
+    items: [itemsSchema],
+};
+
+const List = mongoose.model("List", listSchema);
 
 app.get("/", (req, res) => {
     Item.find({}, (err, foundItems) => {
@@ -38,8 +44,27 @@ app.get("/", (req, res) => {
 });
 
 
-app.get('/work', (req, res) => {
-    res.render('list', { listTitle: 'Pendientes de trabajo', items: workItems });
+app.get("/:customListName", (req, res) => {
+    const customListName = req.params.customListName;
+
+    List.findOne({name: customListName}, (err, foundList) => {
+        if (err) { console.log(err) }
+        else {
+            if (foundList) {
+                console.log("Exits!");
+            } else {
+                console.log("Doesn't exits!");
+            }
+        }
+    })
+
+    // const list = new List({
+    //     name: customListName,
+    //     items: defaultItems
+    // });
+
+    // list.save();
+    // res.render('list', { listTitle: 'Pendientes de trabajo', items: workItems });
 });
 
 
@@ -59,15 +84,6 @@ app.post("/delete", (req, res) => {
     });
 
     res.redirect("/")
-});
-
-
-app.post('/work', (req, res) => {
-    let item = req.body.newItem;
-
-    workItems.push(item);
-
-    res.redirect('/work');
 });
 
 
