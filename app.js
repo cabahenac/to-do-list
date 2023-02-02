@@ -1,10 +1,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require("mongoose");
 
 const app = express();
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
+
+mongoose.set("strictQuery", false);
+mongoose.connect("mongodb://127.0.0.1:27017/todolistDB");
 
 let port = 3000;
 
